@@ -1,0 +1,58 @@
+# Persistent Agent Platform
+# Author: SIVARAMAN R <sivaram311@gmail.com>
+
+spring:
+  application:
+    name: persistent-agent-platform
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:agent_platform}
+    username: ${DB_USER:agent_user}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+agent:
+  workspace-root: ${AGENT_WORKSPACE:E:/MyWorkspace}
+  cli:
+    cursor-agent-path: ${CURSOR_AGENT_PATH:cursor-agent}
+    antigravity-path: ${ANTIGRAVITY_PATH:agy}
+    grok-path: ${GROK_PATH:grok}
+    default-provider: CURSOR
+    session-timeout-minutes: 120
+  consciousness:
+    max-context-messages: 50
+    summary-threshold-messages: 30
+    embedding-dimension: 1536
+  langgraph:
+    enabled: ${LANGGRAPH_ENABLED:false}
+    service-url: ${LANGGRAPH_URL:http://localhost:8090}
+  dify:
+    enabled: ${DIFY_ENABLED:false}
+    base-url: ${DIFY_URL:http://localhost:3000}
+    api-key: ${DIFY_API_KEY:}
+
+logging:
+  level:
+    com.sivaraman.agentplatform: INFO
