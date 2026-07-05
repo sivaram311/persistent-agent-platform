@@ -41,10 +41,11 @@ public class AgentOrchestratorService {
     @Transactional
     public ChatResponse chat(ChatRequest request) {
         AgentSession session = resolveSession(request);
-        historyService.saveMessage(session.getId(), MessageRole.USER, request.getMessage());
 
         String consciousnessContext = consciousnessService.buildContextPrompt(session.getId());
-        String enrichedPrompt = consciousnessContext + "\n\nUSER REQUEST:\n" + request.getMessage();
+        String enrichedPrompt = buildEnrichedPrompt(consciousnessContext, request.getMessage());
+
+        historyService.saveMessage(session.getId(), MessageRole.USER, request.getMessage());
 
         SolutionType solution = resolveSolution(request, enrichedPrompt);
         String reply = dispatch(solution, session, enrichedPrompt);
@@ -129,5 +130,12 @@ public class AgentOrchestratorService {
         Path cwd = Path.of(session.getProjectFolder());
         CliExecutionResult result = cliAgentService.execute(provider, prompt, session.getExternalId(), cwd);
         return result.effectiveOutput();
+    }
+
+    private String buildEnrichedPrompt(String consciousnessContext, String userMessage) {
+        if (consciousnessContext == null || consciousnessContext.isBlank()) {
+            return userMessage;
+        }
+        return consciousnessContext + "\n\nUSER REQUEST:\n" + userMessage;
     }
 }

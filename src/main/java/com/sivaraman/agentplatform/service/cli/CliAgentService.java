@@ -25,12 +25,16 @@ public class CliAgentService {
     private final AgentProperties properties;
 
     public CliExecutionResult execute(CliProvider provider, String prompt, String sessionId, Path workingDirectory) {
-        List<String> command = buildCommand(provider, prompt, sessionId);
+        List<String> command = wrapForWindows(buildCommand(provider, prompt, sessionId));
         long start = System.currentTimeMillis();
 
         ProcessBuilder builder = new ProcessBuilder(command);
         builder.directory(workingDirectory.toFile());
         builder.redirectErrorStream(false);
+        String path = System.getenv("PATH");
+        if (path != null) {
+            builder.environment().put("PATH", path);
+        }
 
         StringBuilder stdout = new StringBuilder();
         StringBuilder stderr = new StringBuilder();
@@ -83,6 +87,7 @@ public class CliAgentService {
                 cmd.add("-p");
                 cmd.add(prompt);
                 cmd.add("--force");
+                cmd.add("--trust");
                 if (sessionId != null && !sessionId.isBlank()) {
                     cmd.add("--resume");
                     cmd.add(sessionId);
@@ -108,5 +113,21 @@ public class CliAgentService {
             }
         }
         return cmd;
+    }
+
+    private List<String> wrapForWindows(List<String> command) {
+        if (command.isEmpty()) {
+            return command;
+        }
+        String executable = command.get(0);
+        if (System.getProperty("os.name", "").toLowerCase().contains("win")
+                && (executable.endsWith(".cmd") || executable.endsWith(".bat"))) {
+            List<String> wrapped = new ArrayList<>();
+            wrapped.add("cmd.exe");
+            wrapped.add("/c");
+            wrapped.addAll(command);
+            return wrapped;
+        }
+        return command;
     }
 }

@@ -1,0 +1,19 @@
+# Local configuration template
+# Copy to application-local.yml and adjust values
+# Author: SIVARAMAN R <sivaram311@gmail.com>
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/agent_platform
+    username: agent_user
+    password: YOUR_PASSWORD_HERE
+
+agent:
+  workspace-root: E:/MyWorkspace/persistent-agent-platform
+  cli:
+    cursor-agent-path: C:/Users/Administrator/AppData/Local/cursor-agent/cursor-agent.cmd
+    antigravity-path: C:/Users/Administrator/AppData/Local/agy/bin/agy.exe
+
+logging:
+  level:
+    com.sivaraman.agentplatform: DEBUG

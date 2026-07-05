@@ -8,5 +8,6 @@ target/
 .env
 .env.local
 application-local.yml
+scripts/*.env
 .DS_Store
 Thumbs.db
