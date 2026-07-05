@@ -14,4 +14,9 @@ public class WebController {
     public String index() {
         return "redirect:/index.html";
     }
+
+    @GetMapping("/static/index.html")
+    public String legacyStaticIndex() {
+        return "redirect:/index.html";
+    }
 }
