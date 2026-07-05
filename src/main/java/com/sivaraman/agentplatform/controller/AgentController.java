@@ -7,6 +7,8 @@ package com.sivaraman.agentplatform.controller;
 import com.sivaraman.agentplatform.dto.ChatRequest;
 import com.sivaraman.agentplatform.dto.ChatResponse;
 import com.sivaraman.agentplatform.dto.MessageDto;
+import com.sivaraman.agentplatform.entity.AgentSession;
+import com.sivaraman.agentplatform.repository.AgentSessionRepository;
 import com.sivaraman.agentplatform.service.AgentOrchestratorService;
 import com.sivaraman.agentplatform.service.history.HistoryService;
 import jakarta.validation.Valid;
@@ -25,6 +27,7 @@ public class AgentController {
 
     private final AgentOrchestratorService orchestratorService;
     private final HistoryService historyService;
+    private final AgentSessionRepository sessionRepository;
 
     @GetMapping("/health")
     public Map<String, String> health() {
@@ -43,5 +46,12 @@ public class AgentController {
     @GetMapping("/sessions/{sessionId}/history")
     public ResponseEntity<List<MessageDto>> history(@PathVariable UUID sessionId) {
         return ResponseEntity.ok(historyService.getHistory(sessionId));
+    }
+
+    @GetMapping("/sessions/external/{externalId}/history")
+    public ResponseEntity<List<MessageDto>> historyByExternalId(@PathVariable String externalId) {
+        return sessionRepository.findByExternalId(externalId)
+                .map(session -> ResponseEntity.ok(historyService.getHistory(session.getId())))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -58,7 +58,7 @@ public class ConsciousnessService {
         long count = messageRepository.countBySessionId(sessionId);
         int threshold = properties.getConsciousness().getSummaryThresholdMessages();
 
-        if (count > 0 && count % threshold == 0) {
+        if (count >= 2 && (count <= 2 || count % threshold == 0)) {
             List<ConversationMessage> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
             String summary = summarizeMessages(messages);
             int nextVersion = snapshotRepository.findFirstBySessionIdOrderByVersionDesc(sessionId)

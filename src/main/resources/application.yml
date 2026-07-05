@@ -35,6 +35,10 @@ management:
 
 agent:
   workspace-root: ${AGENT_WORKSPACE:E:/MyWorkspace}
+  security:
+    enabled: ${SECURITY_ENABLED:false}
+    username: ${AGENT_USERNAME:admin}
+    password: ${AGENT_PASSWORD:changeme}
   cli:
     cursor-agent-path: ${CURSOR_AGENT_PATH:cursor-agent}
     antigravity-path: ${ANTIGRAVITY_PATH:agy}

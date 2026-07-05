@@ -101,11 +101,15 @@ curl.exe -s -X POST http://localhost:8080/api/v1/chat \
 
 | Document | Description |
 |----------|-------------|
+| **[PROJECT_CONSCIOUSNESS.md](PROJECT_CONSCIOUSNESS.md)** | **AI context file — read first** |
 | [Setup Guide](docs/SETUP.md) | PostgreSQL, config, build, run, troubleshooting |
 | [API Reference](docs/API.md) | All endpoints with curl examples and sample responses |
 | [Architecture](docs/ARCHITECTURE.md) | System design, package structure, request flow |
 | [Project Status](docs/PROJECT_STATUS.md) | What's done, curl verification results, next steps |
-| [Action Plan](docs/ACTION_PLAN.md) | Full 5-phase implementation roadmap |
+| [Action Plan](docs/ACTION_PLAN.md) | Full 6-phase implementation roadmap |
+| [Phase 5 & 6 Pending](docs/PHASE_PENDING.md) | Deferred enhancements and scale items |
+| [Production](docs/PRODUCTION.md) | Auth, NSSM, Caddy HTTPS deployment |
+| [Dify Setup](docs/DIFY_SETUP.md) | Phase 3 Dify Docker deployment |
 
 ---
 

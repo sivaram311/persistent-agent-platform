@@ -13,6 +13,7 @@ import com.sivaraman.agentplatform.dto.ChatResponse;
 import com.sivaraman.agentplatform.entity.AgentSession;
 import com.sivaraman.agentplatform.repository.AgentSessionRepository;
 import com.sivaraman.agentplatform.service.cli.CliAgentService;
+import com.sivaraman.agentplatform.service.cli.CliAuditService;
 import com.sivaraman.agentplatform.service.cli.CliExecutionResult;
 import com.sivaraman.agentplatform.service.consciousness.ConsciousnessService;
 import com.sivaraman.agentplatform.service.dify.DifyAgentService;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -34,21 +36,29 @@ public class AgentOrchestratorService {
     private final HistoryService historyService;
     private final ConsciousnessService consciousnessService;
     private final CliAgentService cliAgentService;
+    private final CliAuditService cliAuditService;
     private final LangGraphAgentService langGraphAgentService;
     private final DifyAgentService difyAgentService;
     private final AgentProperties properties;
 
     @Transactional
     public ChatResponse chat(ChatRequest request) {
+        return chat(request, null, null);
+    }
+
+    @Transactional
+    public ChatResponse chat(ChatRequest request, Consumer<String> statusConsumer,
+                             Consumer<String> streamConsumer) {
         AgentSession session = resolveSession(request);
-
+        String userMessage = request.getMessage();
         String consciousnessContext = consciousnessService.buildContextPrompt(session.getId());
-        String enrichedPrompt = buildEnrichedPrompt(consciousnessContext, request.getMessage());
 
-        historyService.saveMessage(session.getId(), MessageRole.USER, request.getMessage());
+        historyService.saveMessage(session.getId(), MessageRole.USER, userMessage);
 
-        SolutionType solution = resolveSolution(request, enrichedPrompt);
-        String reply = dispatch(solution, session, enrichedPrompt);
+        SolutionType solution = resolveSolution(request, userMessage);
+        emit(statusConsumer, "Routing to " + solution.name());
+
+        String reply = dispatch(solution, session, userMessage, consciousnessContext, statusConsumer, streamConsumer);
 
         historyService.saveMessage(session.getId(), MessageRole.ASSISTANT, reply);
         consciousnessService.maybeRefreshSnapshot(session.getId());
@@ -100,35 +110,50 @@ public class AgentOrchestratorService {
         return properties.getWorkspaceRoot();
     }
 
-    private SolutionType resolveSolution(ChatRequest request, String prompt) {
+    private SolutionType resolveSolution(ChatRequest request, String userMessage) {
         if (request.getSolutionType() != null) {
             return request.getSolutionType();
         }
-        if (prompt.toLowerCase().contains("knowledge base") && properties.getDify().isEnabled()) {
+        String lower = userMessage.toLowerCase();
+        if (lower.contains("knowledge base") && properties.getDify().isEnabled()) {
             return SolutionType.DIFY;
         }
-        if (prompt.toLowerCase().contains("multi-step") && properties.getLanggraph().isEnabled()) {
+        if (lower.contains("multi-step") && properties.getLanggraph().isEnabled()) {
             return SolutionType.LANGGRAPH;
         }
         return SolutionType.CLI_WRAPPER;
     }
 
-    private String dispatch(SolutionType solution, AgentSession session, String prompt) {
+    private String dispatch(SolutionType solution, AgentSession session, String userMessage,
+                            String consciousnessContext, Consumer<String> statusConsumer,
+                            Consumer<String> streamConsumer) {
         return switch (solution) {
-            case CLI_WRAPPER -> runCli(session, prompt);
-            case LANGGRAPH -> langGraphAgentService.invoke(session.getExternalId(), prompt,
-                    consciousnessService.latestSummary(session.getId()));
-            case DIFY -> difyAgentService.invoke(session.getExternalId(), prompt);
+            case CLI_WRAPPER -> runCli(session, userMessage, statusConsumer, streamConsumer);
+            case LANGGRAPH -> {
+                emit(statusConsumer, "Invoking LangGraph sidecar...");
+                String enriched = buildEnrichedPrompt(consciousnessContext, userMessage);
+                yield langGraphAgentService.invoke(session.getExternalId(), enriched,
+                        consciousnessService.latestSummary(session.getId()));
+            }
+            case DIFY -> {
+                emit(statusConsumer, "Invoking Dify...");
+                String enriched = buildEnrichedPrompt(consciousnessContext, userMessage);
+                yield difyAgentService.invoke(session.getExternalId(), enriched);
+            }
         };
     }
 
-    private String runCli(AgentSession session, String prompt) {
+    private String runCli(AgentSession session, String userMessage,
+                          Consumer<String> statusConsumer, Consumer<String> streamConsumer) {
         CliProvider provider = session.getCliProvider() != null
                 ? session.getCliProvider()
                 : CliProvider.CURSOR;
 
+        emit(statusConsumer, "Running " + provider.name() + " CLI agent...");
         Path cwd = Path.of(session.getProjectFolder());
-        CliExecutionResult result = cliAgentService.execute(provider, prompt, session.getExternalId(), cwd);
+        CliExecutionResult result = cliAgentService.execute(
+                provider, userMessage, session.getExternalId(), cwd, streamConsumer);
+        cliAuditService.logExecution(session.getId(), result);
         return result.effectiveOutput();
     }
 
@@ -137,5 +162,11 @@ public class AgentOrchestratorService {
             return userMessage;
         }
         return consciousnessContext + "\n\nUSER REQUEST:\n" + userMessage;
+    }
+
+    private void emit(Consumer<String> consumer, String message) {
+        if (consumer != null) {
+            consumer.accept(message);
+        }
     }
 }

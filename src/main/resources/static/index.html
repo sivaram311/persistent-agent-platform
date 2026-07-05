@@ -15,13 +15,21 @@
         .msg { padding: 0.75rem 1rem; border-radius: 0.75rem; max-width: 85%; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
         .msg.user { background: #2563eb; align-self: flex-end; }
         .msg.assistant { background: #1e293b; border: 1px solid #334155; align-self: flex-start; }
-        .controls { display: flex; gap: 0.5rem; padding: 1rem 0; }
+        .msg.status { background: #0f172a; border: 1px dashed #475569; align-self: center; font-size: 0.85rem; color: #94a3b8; max-width: 100%; }
+        .msg.stream { background: #1a1f2e; border: 1px solid #334155; align-self: flex-start; font-family: Consolas, monospace; font-size: 0.8rem; color: #94a3b8; max-width: 95%; }
+        .controls { display: flex; gap: 0.5rem; padding: 1rem 0; flex-wrap: wrap; }
         select, input, button { font-family: inherit; font-size: 0.9rem; border-radius: 0.5rem; border: 1px solid #334155; padding: 0.6rem 0.8rem; background: #1e293b; color: #e2e8f0; }
-        input { flex: 1; }
+        input { flex: 1; min-width: 200px; }
         button { background: #2563eb; border-color: #2563eb; cursor: pointer; font-weight: 600; }
         button:hover { background: #1d4ed8; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .meta { font-size: 0.75rem; color: #64748b; padding: 0.25rem 0; }
+        .loading { display: none; align-items: center; gap: 0.5rem; color: #94a3b8; font-size: 0.85rem; padding: 0.5rem 0; }
+        .loading.active { display: flex; }
+        .spinner { width: 16px; height: 16px; border: 2px solid #334155; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #streamLog { display: none; max-height: 120px; overflow-y: auto; font-family: Consolas, monospace; font-size: 0.75rem; background: #0b1120; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.5rem; margin-bottom: 0.5rem; color: #64748b; }
+        #streamLog.active { display: block; }
     </style>
 </head>
 <body>
@@ -30,7 +38,9 @@
         <span>SIVARAMAN R &mdash; Self-Hosted VPS Agent</span>
     </header>
     <main>
-        <div class="meta" id="sessionMeta">Session: new</div>
+        <div class="meta" id="sessionMeta">Session: new | WebSocket ready</div>
+        <div class="loading" id="loading"><div class="spinner"></div><span id="loadingText">Agent working...</span></div>
+        <div id="streamLog"></div>
         <div id="messages"></div>
         <div class="controls">
             <select id="solution">
@@ -49,53 +59,79 @@
     </main>
     <script>
         let sessionId = null;
+        let ws = null;
+        let streamDiv = null;
         const messages = document.getElementById('messages');
         const promptInput = document.getElementById('prompt');
         const sendBtn = document.getElementById('send');
         const sessionMeta = document.getElementById('sessionMeta');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const streamLog = document.getElementById('streamLog');
 
-        function appendMessage(role, content) {
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(protocol + '//' + location.host + '/ws/chat');
+            ws.onopen = () => sessionMeta.textContent = (sessionMeta.textContent.split('|')[0].trim()) + ' | WebSocket connected';
+            ws.onclose = () => { sessionMeta.textContent = (sessionMeta.textContent.split('|')[0].trim()) + ' | WebSocket disconnected'; setTimeout(connectWebSocket, 3000); };
+            ws.onerror = () => ws.close();
+            ws.onmessage = (event) => handleWsMessage(JSON.parse(event.data));
+        }
+
+        function appendMessage(role, content, id) {
             const div = document.createElement('div');
             div.className = 'msg ' + role;
+            if (id) div.id = id;
             div.textContent = content;
             messages.appendChild(div);
             messages.scrollTop = messages.scrollHeight;
+            return div;
         }
 
-        async function sendMessage() {
-            const message = promptInput.value.trim();
-            if (!message) return;
+        function setLoading(active, text) {
+            loading.classList.toggle('active', active);
+            if (text) loadingText.textContent = text;
+            sendBtn.disabled = active;
+        }
 
-            promptInput.value = '';
-            sendBtn.disabled = true;
-            appendMessage('user', message);
-
-            try {
-                const body = {
-                    message,
-                    sessionId,
-                    solutionType: document.getElementById('solution').value,
-                    cliProvider: document.getElementById('provider').value
-                };
-
-                const res = await fetch('/api/v1/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                const data = await res.json();
+        function handleWsMessage(data) {
+            if (data.type === 'status') {
+                loadingText.textContent = data.content;
+                appendMessage('status', data.content);
+            } else if (data.type === 'stream') {
+                streamLog.classList.add('active');
+                streamLog.textContent += data.content + '\n';
+                streamLog.scrollTop = streamLog.scrollHeight;
+            } else if (data.type === 'complete') {
+                setLoading(false);
+                streamLog.classList.remove('active');
+                streamLog.textContent = '';
                 sessionId = data.externalSessionId;
                 sessionMeta.textContent = 'Session: ' + sessionId + ' | Solution: ' + data.solutionUsed;
                 appendMessage('assistant', data.reply);
-            } catch (err) {
-                appendMessage('assistant', 'Error: ' + err.message);
-            } finally {
-                sendBtn.disabled = false;
                 promptInput.focus();
             }
         }
 
+        function sendMessage() {
+            const message = promptInput.value.trim();
+            if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+            promptInput.value = '';
+            setLoading(true, 'Sending to agent...');
+            streamLog.textContent = '';
+            appendMessage('user', message);
+
+            ws.send(JSON.stringify({
+                type: 'chat',
+                message,
+                sessionId,
+                solutionType: document.getElementById('solution').value,
+                cliProvider: document.getElementById('provider').value
+            }));
+        }
+
+        connectWebSocket();
         sendBtn.addEventListener('click', sendMessage);
         promptInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
     </script>

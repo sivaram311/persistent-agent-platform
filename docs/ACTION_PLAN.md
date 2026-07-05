@@ -5,7 +5,9 @@
 **Project:** Persistent Agent Platform  
 **Workspace:** `E:\MyWorkspace\persistent-agent-platform`  
 **Date:** 2026-07-06  
-**Status:** Phase 1 — Foundation (In Progress)
+**Status:** Phase 1 Complete | Phases 2–4 In Progress | Phases 5–6 Pending
+
+See [PHASE_PENDING.md](PHASE_PENDING.md) for deferred Phase 5 & 6 scope.
 
 ---
 

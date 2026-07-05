@@ -1,0 +1,24 @@
+# Dify self-hosted deployment (Phase 3)
+# Author: SIVARAMAN R <sivaram311@gmail.com>
+#
+# Requires Docker Desktop + WSL2 on Windows Server 2025.
+# See docs/DIFY_SETUP.md for full instructions.
+
+services:
+  dify-api:
+    image: langgenius/dify-api:latest
+    ports:
+      - "5001:5001"
+    environment:
+      - MODE=api
+    restart: unless-stopped
+
+  dify-web:
+    image: langgenius/dify-web:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - CONSOLE_API_URL=http://localhost:5001
+    depends_on:
+      - dify-api
+    restart: unless-stopped

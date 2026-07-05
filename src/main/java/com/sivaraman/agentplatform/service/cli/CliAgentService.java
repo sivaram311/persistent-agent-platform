@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import java.util.function.Consumer;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,6 +27,11 @@ public class CliAgentService {
     private final AgentProperties properties;
 
     public CliExecutionResult execute(CliProvider provider, String prompt, String sessionId, Path workingDirectory) {
+        return execute(provider, prompt, sessionId, workingDirectory, null);
+    }
+
+    public CliExecutionResult execute(CliProvider provider, String prompt, String sessionId,
+                                    Path workingDirectory, Consumer<String> lineConsumer) {
         List<String> command = wrapForWindows(buildCommand(provider, prompt, sessionId));
         long start = System.currentTimeMillis();
 
@@ -49,6 +56,9 @@ public class CliAgentService {
                 String line;
                 while ((line = outReader.readLine()) != null) {
                     stdout.append(line).append(System.lineSeparator());
+                    if (lineConsumer != null) {
+                        lineConsumer.accept(line);
+                    }
                 }
                 while ((line = errReader.readLine()) != null) {
                     stderr.append(line).append(System.lineSeparator());
