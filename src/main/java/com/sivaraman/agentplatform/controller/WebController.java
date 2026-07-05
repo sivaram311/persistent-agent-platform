@@ -12,6 +12,6 @@ public class WebController {
 
     @GetMapping("/")
     public String index() {
-        return "redirect:/static/index.html";
+        return "redirect:/index.html";
     }
 }

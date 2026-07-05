@@ -109,7 +109,7 @@ If message_count % threshold == 0 → create new consciousness_snapshot
 
 ## 5. Phase-by-Phase Implementation
 
-### Phase 1 — Foundation (Week 1–2) ✅ STARTED
+### Phase 1 — Foundation (Week 1–2) ✅ COMPLETE
 
 **Goal:** Working Spring Boot app with PostgreSQL, CLI wrapper, web chat.
 
@@ -122,11 +122,14 @@ If message_count % threshold == 0 → create new consciousness_snapshot
 | ConsciousnessService + HistoryService | Done | SIVARAMAN R |
 | AgentOrchestratorService (routing) | Done | SIVARAMAN R |
 | REST API + static chat UI | Done | SIVARAMAN R |
-| Install PostgreSQL on VPS | Pending | |
-| End-to-end CLI test with cursor-agent | Pending | |
-| WebSocket streaming for live output | Pending | |
+| Install PostgreSQL on VPS | Done | PostgreSQL 18.4 |
+| Configure agent_platform database | Done | agent_user created |
+| End-to-end CLI test with cursor-agent | Done | Verified via curl |
+| Documentation (SETUP, API, ARCHITECTURE) | Done | docs/ folder |
+| curl API verification script | Done | scripts/verify-api.ps1 |
+| WebSocket streaming for live output | Pending | Phase 5 |
 
-**Exit criteria:** Send a message in browser → CLI runs → reply saved in PostgreSQL → consciousness snapshot created.
+**Exit criteria:** ✅ Send a message in browser → CLI runs → reply saved in PostgreSQL → consciousness snapshot created.
 
 ---
 
@@ -306,11 +309,11 @@ net start AgentPlatform
 
 ## 11. Next Immediate Actions
 
-1. Install and configure PostgreSQL on the VPS
-2. Run `mvn spring-boot:run` and test `/api/v1/chat` with cursor-agent
-3. Verify consciousness snapshots appear in PostgreSQL after 30 messages
-4. Begin Phase 2 LangGraph sidecar Python project
-5. Plan Dify Docker deployment (Phase 3)
+1. ~~Install and configure PostgreSQL on the VPS~~ ✅ Done
+2. ~~Run `mvn spring-boot:run` and test `/api/v1/chat` with cursor-agent~~ ✅ Done
+3. Begin Phase 2 LangGraph sidecar Python project
+4. Plan Dify Docker deployment (Phase 3)
+5. Add NSSM Windows service + Caddy HTTPS (Phase 4)
 
 ---
 
