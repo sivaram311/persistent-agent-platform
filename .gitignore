@@ -9,6 +9,9 @@ target/
 .env.local
 application-local.yml
 langgraph-sidecar/.env
+langgraph-sidecar/.venv/
+langgraph-sidecar/__pycache__/
+langgraph-sidecar/tools/__pycache__/
 dify/.env
 .DS_Store
 Thumbs.db
