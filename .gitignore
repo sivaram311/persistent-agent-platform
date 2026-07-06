@@ -8,6 +8,7 @@ target/
 .env
 .env.local
 application-local.yml
-scripts/*.env
+langgraph-sidecar/.env
+dify/.env
 .DS_Store
 Thumbs.db

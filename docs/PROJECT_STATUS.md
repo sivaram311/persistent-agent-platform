@@ -3,112 +3,63 @@
 **Author:** SIVARAMAN R  
 **Email:** sivaram311@gmail.com  
 **Repository:** https://github.com/sivaram311/persistent-agent-platform  
+**Version:** 0.2.0-SNAPSHOT  
 **Last updated:** 2026-07-06
 
 ---
 
-## Current Phase: Phase 1 Complete
+## Phase Summary
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| **1** | Foundation | ✅ **Complete** |
+| **2** | LangGraph sidecar | ✅ **Complete** |
+| **3** | Dify deployment | ✅ **Complete** (deploy with Docker) |
+| **4** | Production hardening | ✅ **Complete** (run install scripts) |
+| **5** | Enhancements | ⏸ Pending → `docs/PHASE_PENDING.md` |
+| **6** | Advanced scale | ⏸ Pending → `docs/PHASE_PENDING.md` |
 
 ---
 
-## Work Completed
+## Phase 2 — LangGraph (Complete)
 
-### Infrastructure
-
-| Item | Status | Details |
-|------|--------|---------|
-| Project created | Done | `E:\MyWorkspace\persistent-agent-platform` |
-| GitHub repo | Done | Public: `sivaram311/persistent-agent-platform` |
-| PostgreSQL 18 database | Done | `agent_platform` on localhost:5432 |
-| Database user | Done | `agent_user` |
-| Flyway V1 migration | Done | 6 tables + routing seed data |
-
-### Application (Spring Boot)
-
-| Item | Status | Details |
-|------|--------|---------|
-| Spring Boot 3.4 scaffold | Done | Java 21, Maven |
-| REST API | Done | health, chat, history |
-| Web chat UI | Done | Static HTML at `/index.html` |
-| Agent orchestrator | Done | Routes to 3 solutions |
-| Consciousness service | Done | Context + snapshots |
-| History service | Done | Full message persistence |
-| CLI wrapper (Solution 1) | Done | Cursor + Antigravity + Grok paths |
-| LangGraph client (Solution 2) | Done | HTTP client, disabled by default |
-| Dify client (Solution 3) | Done | HTTP client, disabled by default |
-| Local profile config | Done | `application-local.yml` (gitignored) |
-| Start script | Done | `scripts/start.ps1` |
-| DB setup script | Done | `scripts/setup-database.sql` |
-
-### Git / Backup (prior work)
-
-| Item | Status | Details |
-|------|--------|---------|
-| GitBackup monorepo | Done | 37 repos consolidated at `E:\GitBackup` |
-| GitHub git-backup repo | Done | Private monorepo snapshot |
+- `langgraph-sidecar/main.py` — FastAPI service :8090
+- `agent_graph.py` — ReAct agent (Grok) + fallback multi-step orchestrator
+- Tools: coding agent, workspace list, web search
+- `scripts/install-langgraph-service.ps1` — NSSM Windows service
+- Enable: `LANGGRAPH_ENABLED=true`
 
 ---
 
-## curl Verification (2026-07-06)
+## Phase 3 — Dify (Complete)
 
-All tests run against `http://localhost:8080`:
+- `dify/docker-compose.yml` — full stack (api, web, worker, postgres, redis)
+- `scripts/setup-dify.ps1` — automated deploy
+- `docs/DIFY_SETUP.md` — configuration guide
+- Enable: `DIFY_ENABLED=true` + API key
 
-| Test | Command | Result |
-|------|---------|--------|
-| Health | `curl.exe -s http://localhost:8080/api/v1/health` | `{"status":"UP","author":"SIVARAMAN R",...}` |
-| Root redirect | `GET /` | HTTP 302 → `/index.html` |
-| Chat UI | `GET /index.html` | HTTP 200 |
-| Actuator | `GET /actuator/health` | HTTP 200 |
-| Chat API | `POST /api/v1/chat` with JSON file | HTTP 200, session + history returned (~36s) |
-| History API | `GET /api/v1/sessions/{uuid}/history` | HTTP 200, message array returned |
+---
 
-Run automated verification:
+## Phase 4 — Production (Complete)
+
+- Spring Security basic auth (optional, `SECURITY_ENABLED=true`)
+- `WorkspaceGuardService` — sandbox to E:\MyWorkspace
+- `CliApprovalService` — blocks destructive commands
+- `logback-spring.xml` — file logging with rotation
+- `scripts/install-production.ps1` — one-command install
+- `scripts/configure-firewall.ps1`, `backup-postgres.ps1`, `setup-backup-task.ps1`
+- `scripts/Caddyfile` + `install-caddy.ps1` — HTTPS
+
+---
+
+## Verification
 
 ```powershell
+curl.exe -s http://localhost:8080/api/v1/health
+curl.exe -s http://localhost:8090/api/v1/health
 .\scripts\verify-api.ps1
 ```
 
 ---
 
-## PostgreSQL Data (live)
-
-After verification runs:
-
-- **Sessions:** 5+
-- **Messages:** 10+
-- **Tables:** 7 (including flyway_schema_history)
-
----
-
-## Known Issues / Notes
-
-| Issue | Status | Notes |
-|-------|--------|-------|
-| Grok CLI not in PATH | Open | Optional; use Cursor or Antigravity |
-| Chat latency 30–60s | Expected | Synchronous CLI execution |
-| Consciousness on first message | Minor | No snapshot until 30 messages |
-| `/static/index.html` | Fixed | Redirect now points to `/index.html` |
-| PowerShell curl JSON escaping | Documented | Use `--data-binary "@file.json"` |
-
----
-
-## Next Steps (Phase 2)
-
-1. Build LangGraph Python sidecar in `langgraph-sidecar/`
-2. Implement FastAPI `/api/v1/agent/run` endpoint
-3. Enable `LANGGRAPH_ENABLED=true`
-4. Test multi-step orchestration via Spring Boot
-
----
-
-## Commit History
-
-| Commit | Description |
-|--------|-------------|
-| `8e44a3f` | Initial scaffold — entities, services, UI, action plan |
-| `9f63626` | Phase 1 — PostgreSQL setup, CLI Windows fixes, scripts |
-| (pending) | Documentation + curl verification + UI redirect fix |
-
----
-
-*Maintained by SIVARAMAN R (sivaram311@gmail.com)*
+*Maintained by SIVARAMAN R*

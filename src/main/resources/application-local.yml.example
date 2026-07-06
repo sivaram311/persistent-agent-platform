@@ -10,9 +10,20 @@ spring:
 
 agent:
   workspace-root: E:/MyWorkspace/persistent-agent-platform
+  security:
+    enabled: false
+    username: admin
+    password: CHANGE_ME
   cli:
     cursor-agent-path: C:/Users/Administrator/AppData/Local/cursor-agent/cursor-agent.cmd
     antigravity-path: C:/Users/Administrator/AppData/Local/agy/bin/agy.exe
+  langgraph:
+    enabled: true
+    service-url: http://localhost:8090
+  dify:
+    enabled: false
+    base-url: http://localhost:3000
+    api-key:
 
 logging:
   level:

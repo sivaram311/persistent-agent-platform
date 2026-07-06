@@ -21,7 +21,7 @@
 | LLM consciousness summaries | Use xAI Grok to summarize instead of text concat | Medium |
 | `memory_entries` Java layer | Entity, repository, service for long-term memory | Medium |
 | File upload in chat UI | Attach files for agent context | Low |
-| Session list / history browser | UI to browse past conversations | Low |
+| ~~Session list / history browser~~ | ~~UI to browse past conversations~~ | Done (sidebar) |
 
 **Exit criteria:** React UI deployed, pgvector queries working, 2+ users with isolated sessions.
 

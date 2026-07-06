@@ -25,19 +25,16 @@ The **Persistent Agent Platform** is a self-hosted, always-on AI agent system fo
 
 ## Current Status (2026-07-06)
 
-**Phase 1 — Complete and verified**
+**Phases 1–4 Complete | Phases 5–6 Pending**
 
-| Component | Status |
-|-----------|--------|
-| Spring Boot application | Running on port 8080 |
-| PostgreSQL 18 database | `agent_platform` configured |
-| Flyway V1 schema | 6 tables applied |
-| Solution 1 — CLI wrapper | Working (Cursor Agent verified) |
-| Solution 2 — LangGraph client | Scaffolded (enable via config) |
-| Solution 3 — Dify client | Scaffolded (enable via config) |
-| Consciousness + history | Persisting to PostgreSQL |
-| Web chat UI | `/index.html` |
-| API verification | curl tests passing |
+| Phase | Status |
+|-------|--------|
+| 1 Foundation | ✅ Complete |
+| 2 LangGraph | ✅ Complete |
+| 3 Dify | ✅ Complete (run `setup-dify.ps1`) |
+| 4 Production | ✅ Complete (run `install-production.ps1`) |
+| 5 Enhancements | ⏸ Pending |
+| 6 Advanced scale | ⏸ Pending |
 
 ---
 

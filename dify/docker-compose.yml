@@ -1,24 +1,84 @@
-# Dify self-hosted deployment (Phase 3)
+# Dify self-hosted — Phase 3 complete stack
 # Author: SIVARAMAN R <sivaram311@gmail.com>
-#
-# Requires Docker Desktop + WSL2 on Windows Server 2025.
-# See docs/DIFY_SETUP.md for full instructions.
+# Based on Dify official self-hosted architecture (simplified for Windows/WSL2)
 
 services:
+  dify-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: dify
+      POSTGRES_PASSWORD: ${DIFY_DB_PASSWORD:-difysecret}
+      POSTGRES_DB: dify
+    volumes:
+      - dify-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dify"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dify-redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${DIFY_REDIS_PASSWORD:-redissecret}
+    volumes:
+      - dify-redis-data:/data
+    restart: unless-stopped
+
   dify-api:
-    image: langgenius/dify-api:latest
+    image: langgenius/dify-api:0.15.3
+    depends_on:
+      dify-db:
+        condition: service_healthy
+      dify-redis:
+        condition: service_started
     ports:
       - "5001:5001"
     environment:
-      - MODE=api
+      MODE: api
+      SECRET_KEY: ${DIFY_SECRET_KEY:-change-me-in-production}
+      DB_USERNAME: dify
+      DB_PASSWORD: ${DIFY_DB_PASSWORD:-difysecret}
+      DB_HOST: dify-db
+      DB_PORT: 5432
+      DB_DATABASE: dify
+      REDIS_HOST: dify-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${DIFY_REDIS_PASSWORD:-redissecret}
+      CELERY_BROKER_URL: redis://:${DIFY_REDIS_PASSWORD:-redissecret}@dify-redis:6379/1
+      WEB_API_CORS_ALLOW_ORIGINS: "*"
+      CONSOLE_CORS_ALLOW_ORIGINS: "*"
+    restart: unless-stopped
+
+  dify-worker:
+    image: langgenius/dify-api:0.15.3
+    depends_on:
+      - dify-api
+    environment:
+      MODE: worker
+      SECRET_KEY: ${DIFY_SECRET_KEY:-change-me-in-production}
+      DB_USERNAME: dify
+      DB_PASSWORD: ${DIFY_DB_PASSWORD:-difysecret}
+      DB_HOST: dify-db
+      DB_PORT: 5432
+      DB_DATABASE: dify
+      REDIS_HOST: dify-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${DIFY_REDIS_PASSWORD:-redissecret}
+      CELERY_BROKER_URL: redis://:${DIFY_REDIS_PASSWORD:-redissecret}@dify-redis:6379/1
     restart: unless-stopped
 
   dify-web:
-    image: langgenius/dify-web:latest
+    image: langgenius/dify-web:0.15.3
+    depends_on:
+      - dify-api
     ports:
       - "3000:3000"
     environment:
-      - CONSOLE_API_URL=http://localhost:5001
-    depends_on:
-      - dify-api
+      CONSOLE_API_URL: http://localhost:5001
+      APP_API_URL: http://localhost:5001
     restart: unless-stopped
+
+volumes:
+  dify-db-data:
+  dify-redis-data:

@@ -1,12 +1,17 @@
 """
-LangGraph Sidecar — Solution 2
+LangGraph Sidecar — Solution 2 (Complete)
 Author: SIVARAMAN R <sivaram311@gmail.com>
 """
 from fastapi import FastAPI
 from pydantic import BaseModel
+from dotenv import load_dotenv
 import os
 
-app = FastAPI(title="LangGraph Agent Sidecar", version="0.1.0")
+load_dotenv()
+
+from agent_graph import run_agent
+
+app = FastAPI(title="LangGraph Agent Sidecar", version="0.2.0")
 
 
 class AgentRunRequest(BaseModel):
@@ -18,39 +23,26 @@ class AgentRunRequest(BaseModel):
 class AgentRunResponse(BaseModel):
     reply: str
     session_id: str
+    mode: str
 
 
 @app.get("/api/v1/health")
 def health():
-    return {"status": "UP", "author": "SIVARAMAN R", "service": "langgraph-sidecar"}
+    has_key = bool(os.getenv("XAI_API_KEY", "").strip())
+    return {
+        "status": "UP",
+        "author": "SIVARAMAN R",
+        "service": "langgraph-sidecar",
+        "xai_configured": has_key,
+        "mode": "grok-react" if has_key else "fallback-orchestrator",
+    }
 
 
 @app.post("/api/v1/agent/run", response_model=AgentRunResponse)
-def run_agent(request: AgentRunRequest):
-    """
-    Phase 2 stub — replace with LangGraph ReAct agent + xAI Grok API.
-    Set XAI_API_KEY in environment to enable full orchestration.
-    """
-    api_key = os.getenv("XAI_API_KEY", "")
-    context_block = ""
-    if request.consciousness_context:
-        context_block = f"\n[Consciousness context]\n{request.consciousness_context}\n"
-
-    if not api_key:
-        reply = (
-            f"LangGraph sidecar received your request.{context_block}\n"
-            f"Prompt: {request.prompt[:500]}\n\n"
-            "To enable full multi-step orchestration, set XAI_API_KEY and install "
-            "langgraph + langchain-xai. See langgraph-sidecar/README.md."
-        )
-    else:
-        reply = (
-            f"LangGraph sidecar (XAI_API_KEY configured).{context_block}\n"
-            f"Prompt received: {request.prompt[:300]}...\n\n"
-            "Implement agent_graph.py with LangGraph workflow next."
-        )
-
-    return AgentRunResponse(reply=reply, session_id=request.session_id)
+def run_agent_endpoint(request: AgentRunRequest):
+    mode = "grok-react" if os.getenv("XAI_API_KEY", "").strip() else "fallback-orchestrator"
+    reply = run_agent(request.prompt, request.consciousness_context)
+    return AgentRunResponse(reply=reply, session_id=request.session_id, mode=mode)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,8 @@ import com.sivaraman.agentplatform.service.consciousness.ConsciousnessService;
 import com.sivaraman.agentplatform.service.dify.DifyAgentService;
 import com.sivaraman.agentplatform.service.history.HistoryService;
 import com.sivaraman.agentplatform.service.langgraph.LangGraphAgentService;
+import com.sivaraman.agentplatform.service.security.CliApprovalService;
+import com.sivaraman.agentplatform.service.security.WorkspaceGuardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +43,8 @@ public class AgentOrchestratorService {
     private final DifyAgentService difyAgentService;
     private final AgentProperties properties;
     private final SessionService sessionService;
+    private final CliApprovalService cliApprovalService;
+    private final WorkspaceGuardService workspaceGuardService;
 
     @Transactional
     public ChatResponse chat(ChatRequest request) {
@@ -52,6 +56,7 @@ public class AgentOrchestratorService {
                              Consumer<String> streamConsumer) {
         AgentSession session = resolveSession(request);
         String userMessage = request.getMessage();
+        cliApprovalService.validatePrompt(userMessage);
         sessionService.updateTitleFromFirstMessage(session, userMessage);
         String consciousnessContext = consciousnessService.buildContextPrompt(session.getId());
 
@@ -107,9 +112,9 @@ public class AgentOrchestratorService {
 
     private String resolveProjectFolder(ChatRequest request) {
         if (request.getProjectFolder() != null && !request.getProjectFolder().isBlank()) {
-            return request.getProjectFolder();
+            return workspaceGuardService.resolveSafePath(request.getProjectFolder()).toString();
         }
-        return properties.getWorkspaceRoot();
+        return workspaceGuardService.resolveSafePath(null).toString();
     }
 
     private SolutionType resolveSolution(ChatRequest request, String userMessage) {

@@ -1,0 +1,20 @@
+# Production profile template
+# Author: SIVARAMAN R <sivaram311@gmail.com>
+# Copy settings into application-local.yml for production deployment
+
+agent:
+  security:
+    enabled: true
+    username: admin
+    password: CHANGE_ME_STRONG_PASSWORD
+  langgraph:
+    enabled: true
+    service-url: http://localhost:8090
+  dify:
+    enabled: true
+    base-url: http://localhost:3000
+    api-key: app-REPLACE_WITH_DIFY_API_KEY
+
+logging:
+  level:
+    com.sivaraman.agentplatform: INFO

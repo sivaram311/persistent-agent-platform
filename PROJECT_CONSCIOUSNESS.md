@@ -24,8 +24,8 @@
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-07-06 |
-| **Last action** | Added multi-session sidebar UI with list, resume, and new chat |
-| **Next up** | Start LangGraph sidecar, deploy Dify, enable auth + NSSM for production |
+| **Last action** | Completed Phases 2, 3, 4 — LangGraph, Dify, production hardening |
+| **Next up** | Run setup-dify.ps1 + install-production.ps1 on VPS; Phase 5 when stable |
 | **App status** | Spring Boot on port 8080, PostgreSQL 18 `agent_platform` DB |
 
 ---
@@ -37,8 +37,8 @@ A **self-hosted, persistent AI agent platform** on Windows Server 2025 VPS. Spri
 | Solution | Name | Status |
 |----------|------|--------|
 | 1 | CLI Wrapper (cursor-agent, agy, grok) | **Working** |
-| 2 | LangGraph Python sidecar | **Scaffolded** (:8090 stub) |
-| 3 | Dify.ai visual agent + RAG | **Scaffolded** (docker-compose) |
+| 2 | LangGraph Python sidecar | **Complete** — :8090 |
+| 3 | Dify.ai visual agent + RAG | **Complete** — docker-compose |
 
 All conversation history and consciousness snapshots persist in PostgreSQL.
 
@@ -158,11 +158,11 @@ Browser (:8080)
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Foundation — Spring Boot + PostgreSQL + CLI | **DONE** |
-| 2 | LangGraph Python sidecar | **Scaffolded** — enable with `LANGGRAPH_ENABLED=true` |
-| 3 | Dify Docker deployment | **Scaffolded** — see `docs/DIFY_SETUP.md` |
-| 4 | Production — Auth + HTTPS + NSSM | **Scripts ready** — see `docs/PRODUCTION.md` |
-| 5 | Enhancements — React UI, pgvector RAG, multi-user | **PENDING** → `docs/PHASE_PENDING.md` |
-| 6 | Advanced scale — API keys, Prometheus, multi-CLI orchestration | **PENDING** → `docs/PHASE_PENDING.md` |
+| 2 | LangGraph Python sidecar | **DONE** |
+| 3 | Dify Docker deployment | **DONE** |
+| 4 | Production — Auth + HTTPS + NSSM | **DONE** |
+| 5 | Enhancements — React UI, pgvector RAG, multi-user | **PENDING** |
+| 6 | Advanced scale — API keys, Prometheus, multi-CLI orchestration | **PENDING** |
 
 See `docs/ACTION_PLAN.md` and `docs/PHASE_PENDING.md` for Phase 5 & 6 details.
 
