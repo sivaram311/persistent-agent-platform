@@ -7,9 +7,11 @@ package com.sivaraman.agentplatform.controller;
 import com.sivaraman.agentplatform.dto.ChatRequest;
 import com.sivaraman.agentplatform.dto.ChatResponse;
 import com.sivaraman.agentplatform.dto.MessageDto;
+import com.sivaraman.agentplatform.dto.SessionSummaryDto;
 import com.sivaraman.agentplatform.entity.AgentSession;
 import com.sivaraman.agentplatform.repository.AgentSessionRepository;
 import com.sivaraman.agentplatform.service.AgentOrchestratorService;
+import com.sivaraman.agentplatform.service.SessionService;
 import com.sivaraman.agentplatform.service.history.HistoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class AgentController {
     private final AgentOrchestratorService orchestratorService;
     private final HistoryService historyService;
     private final AgentSessionRepository sessionRepository;
+    private final SessionService sessionService;
 
     @GetMapping("/health")
     public Map<String, String> health() {
@@ -41,6 +44,13 @@ public class AgentController {
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
         return ResponseEntity.ok(orchestratorService.chat(request));
+    }
+
+    @GetMapping("/sessions")
+    public ResponseEntity<List<SessionSummaryDto>> listSessions(
+            @RequestParam(defaultValue = "50") int limit) {
+        int safeLimit = Math.min(Math.max(limit, 1), 100);
+        return ResponseEntity.ok(sessionService.listRecentSessions(safeLimit));
     }
 
     @GetMapping("/sessions/{sessionId}/history")

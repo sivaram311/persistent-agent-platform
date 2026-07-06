@@ -24,7 +24,7 @@
 | Field | Value |
 |-------|-------|
 | **Date** | 2026-07-06 |
-| **Last action** | Completed improvement items 1–4; Phase 5 & 6 documented as pending |
+| **Last action** | Added multi-session sidebar UI with list, resume, and new chat |
 | **Next up** | Start LangGraph sidecar, deploy Dify, enable auth + NSSM for production |
 | **App status** | Spring Boot on port 8080, PostgreSQL 18 `agent_platform` DB |
 
@@ -80,6 +80,7 @@ All conversation history and consciousness snapshots persist in PostgreSQL.
 - [x] Dify scaffold — `dify/docker-compose.yml` + `docs/DIFY_SETUP.md`
 - [x] Phase 4 scripts — Spring Security, NSSM, Caddy, `docs/PRODUCTION.md`
 - [x] External session history API endpoint
+- [x] Session sidebar UI — list, resume, new chat; localStorage persistence
 
 ---
 

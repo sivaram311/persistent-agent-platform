@@ -12,6 +12,7 @@
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/health` | Platform health check |
+| GET | `/api/v1/sessions` | List recent sessions |
 | POST | `/api/v1/chat` | Send message to agent |
 | GET | `/api/v1/sessions/{sessionId}/history` | Get conversation history |
 | GET | `/actuator/health` | Spring Actuator health |
@@ -46,7 +47,37 @@ curl.exe -s http://localhost:8080/api/v1/health
 
 ---
 
-## 2. Chat
+## 2. List Sessions
+
+Returns recent sessions for the sidebar, ordered by last activity.
+
+### Request
+
+```bash
+curl.exe -s "http://localhost:8080/api/v1/sessions?limit=50"
+```
+
+### Response (200 OK)
+
+```json
+[
+  {
+    "id": "63782e06-c165-47c7-ba55-3743e595a531",
+    "externalId": "94e156eb-b0be-4c04-9d3c-7561b3138a6b",
+    "title": "Reply with exactly: OK",
+    "solutionType": "CLI_WRAPPER",
+    "cliProvider": "CURSOR",
+    "status": "ACTIVE",
+    "messageCount": 2,
+    "createdAt": "2026-07-05T21:34:56Z",
+    "lastActiveAt": "2026-07-05T21:35:29Z"
+  }
+]
+```
+
+---
+
+## 3. Chat
 
 Send a message to the agent. The platform routes to Solution 1 (CLI), Solution 2 (LangGraph), or Solution 3 (Dify) based on request parameters and configuration.
 
@@ -121,7 +152,7 @@ curl.exe -s -X POST http://localhost:8080/api/v1/chat \
 
 ---
 
-## 3. Session History
+## 4. Session History
 
 Retrieve all messages for a session using the internal UUID (`sessionId` from chat response, not `externalSessionId`).
 

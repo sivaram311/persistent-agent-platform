@@ -40,6 +40,7 @@ public class AgentOrchestratorService {
     private final LangGraphAgentService langGraphAgentService;
     private final DifyAgentService difyAgentService;
     private final AgentProperties properties;
+    private final SessionService sessionService;
 
     @Transactional
     public ChatResponse chat(ChatRequest request) {
@@ -51,6 +52,7 @@ public class AgentOrchestratorService {
                              Consumer<String> streamConsumer) {
         AgentSession session = resolveSession(request);
         String userMessage = request.getMessage();
+        sessionService.updateTitleFromFirstMessage(session, userMessage);
         String consciousnessContext = consciousnessService.buildContextPrompt(session.getId());
 
         historyService.saveMessage(session.getId(), MessageRole.USER, userMessage);
